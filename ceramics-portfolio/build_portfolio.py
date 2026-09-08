@@ -18,6 +18,7 @@ from reportlab.pdfgen import canvas
 
 ROOT = Path(__file__).resolve().parent
 PHOTO_DIR = ROOT / "photos"
+RAW_DIR = PHOTO_DIR / "raw"
 FONT_DIR = ROOT / "fonts"
 OUTPUT = ROOT / "Mennatallah_Rihan_Ceramics_Portfolio.pdf"
 
@@ -212,7 +213,7 @@ def cover_page(c: canvas.Canvas, hero: str) -> None:
     c.setFillColorRGB(*MUTED)
     c.setFont("SourceSansLight", 8.5)
     c.drawCentredString(PAGE_W / 2, 0.72 * inch, "Hand-thrown and hand-built stoneware")
-    c.drawCentredString(PAGE_W / 2, 0.56 * inch, "Photographs unaltered  ·  objects shown as fired")
+    c.drawCentredString(PAGE_W / 2, 0.56 * inch, "Pieces photographed as fired  ·  shown on one studio set")
     c.showPage()
 
 
@@ -228,7 +229,8 @@ def colophon_page(c: canvas.Canvas, page_no: int) -> None:
 
     body = [
         "These photographs are the artist's own records of finished and in-process work.",
-        "Each object is shown unaltered: no filters, retouching, or background removal.",
+        "Pottery is shown as fired. Surroundings were replaced with the wall and wood",
+        "from the earth-tone set, so the book reads as one studio.",
         "Where several frames showed the same piece, the clearest detail views were kept",
         "and weaker duplicates were set aside.",
         "",
@@ -278,20 +280,21 @@ SELECTION = [
 
 
 def prepare_all() -> None:
+    RAW_DIR.mkdir(parents=True, exist_ok=True)
     PHOTO_DIR.mkdir(parents=True, exist_ok=True)
     if not SOURCE_DIR.exists():
-        missing = [dest for _, dest in SELECTION if not (PHOTO_DIR / dest).exists()]
+        missing = [dest for _, dest in SELECTION if not (RAW_DIR / dest).exists()]
         if missing:
             raise FileNotFoundError(
-                f"Source photos not found and missing from photos/: {missing}"
+                f"Source photos not found and missing from photos/raw/: {missing}"
             )
-        print("using existing photos/")
+        print("using existing photos/raw/")
         return
     for src_name, dest_name in SELECTION:
         src = SOURCE_DIR / src_name
         if not src.exists():
             raise FileNotFoundError(src)
-        prepare_photo(src, PHOTO_DIR / dest_name)
+        prepare_photo(src, RAW_DIR / dest_name)
         print(f"prepared {dest_name}")
 
 
@@ -303,7 +306,7 @@ def build_pdf() -> None:
     c.setSubject("A portfolio of recent pottery work")
     c.setCreator("ceramics-portfolio/build_portfolio.py")
 
-    cover_page(c, "mug-plate-in-use.jpg")
+    cover_page(c, "collection-earthtones.jpg")
 
     n = 1
     work_page_single(
@@ -458,5 +461,11 @@ def build_pdf() -> None:
 
 
 if __name__ == "__main__":
+    import sys
+
+    sys.path.insert(0, str(ROOT))
+    from studio import process_all as studio_process
+
     prepare_all()
+    studio_process()
     build_pdf()
