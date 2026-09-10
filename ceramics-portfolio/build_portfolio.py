@@ -528,6 +528,10 @@ NEW_SHOTS = [
     ("D3551C23-8EBF-40A6-9861-349A4B27B257_L0_001.jpg", "wheat-pair.jpg"),
     ("DB9E5187-A6FE-4FF2-975A-EDBC5F5C7631_L0_001.jpg", "tumbler-carved-dark.jpg"),
     ("EEE14675-9BF5-4AE5-862F-CECAC228A6FE_L0_001.jpg", "vase-low-teal.jpg"),
+    ("01a08ccd-8cd7-7c48-8b49-38e1a2387445.jpg", "bowl-sculptural-side.jpg"),
+    ("01a08ccd-8df0-7463-936f-3acff6ccd9d2.jpg", "bowl-sculptural-profile.jpg"),
+    ("01a08ccd-8d95-748c-b57f-408335241973.jpg", "bowl-sculptural-interior.jpg"),
+    ("01a08ccd-8e52-7968-90fb-e2b3965c2afb.jpg", "cup-blush.jpg"),
 ]
 
 # Pieces with no new photograph — original background, tight-cropped to the ware.
@@ -539,8 +543,6 @@ LEFTOVER = [
     ("01a07eda-fd97-7b70-900f-4a3d32dcd43f.jpg", "yunomi-exterior.jpg"),
     ("01a07eda-fd6a-7fe2-85e9-9e08a8a8b74e.jpg", "yunomi-interior.jpg"),
     ("01a07edc-9d41-7de5-8e35-c7f89c6637d2.jpg", "bowl-midnight-interior.jpg"),
-    ("01a07edc-9ea3-7d94-929d-ae44ee034ccf.jpg", "bowl-sculptural-interior.jpg"),
-    ("01a07edc-9ebb-7504-bfc5-0b1b6b98a51e.jpg", "bowl-sculptural-side.jpg"),
     ("01a07edc-9f71-775b-927e-8139bf7f4578.jpg", "dish-spiral-black.jpg"),
     ("01a07edc-a017-7efc-9c2b-43ffd6965e02.jpg", "grater-garlic.jpg"),
     ("01a07edc-a1ee-74c9-b95a-68ebd10caf50.jpg", "process-carved-spiral.jpg"),
@@ -714,15 +716,35 @@ def build_pdf() -> None:
         "cup",
     )
     n += 1
+    work_single(
+        c,
+        "cup-blush.jpg",
+        "Blush cup",
+        "Speckled pale-blue with rust blush and a tan rim",
+        n,
+        "blush",
+        angle=1.1,
+    )
+    n += 1
     work_pair(
         c,
-        "bowl-sculptural-interior.jpg",
         "bowl-sculptural-side.jpg",
+        "bowl-sculptural-profile.jpg",
         "Sculptural bowl",
-        "Leaf-like rim attachments; spiral well and metallic body",
+        "Leaf-like rim attachments on a dark iron body",
         n,
-        "interior",
-        "side",
+        "wreath",
+        "leaf",
+    )
+    n += 1
+    work_single(
+        c,
+        "bowl-sculptural-interior.jpg",
+        "Sculptural well",
+        "Spiral well in glossy green, rimmed with modeled leaves",
+        n,
+        "from above",
+        angle=-0.8,
     )
     n += 1
     work_pair(
