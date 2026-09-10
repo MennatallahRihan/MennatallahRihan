@@ -420,15 +420,15 @@ def work_pair(
 def cover_page(c: canvas.Canvas, hero: str) -> None:
     paint_page(c)
     opaque(c)
-    c.setFillColorRGB(*TEAL)
-    c.setFont("SourceSans", 9)
-    c.drawCentredString(PAGE_W / 2, PAGE_H - 0.62 * inch, "MENNATALLAH RIHAN")
     c.setFillColorRGB(*INK)
     c.setFont("Cormorant", 40)
-    c.drawCentredString(PAGE_W / 2, PAGE_H - 1.18 * inch, "Ceramics")
+    c.drawCentredString(PAGE_W / 2, PAGE_H - 0.88 * inch, "Ceramics")
     c.setFillColorRGB(*MUTED)
     c.setFont("CormorantItalic", 13)
-    c.drawCentredString(PAGE_W / 2, PAGE_H - 1.50 * inch, "a scrapbook of recent work")
+    c.drawCentredString(PAGE_W / 2, PAGE_H - 1.22 * inch, "Works by Menna Rihan")
+    c.setFillColorRGB(*TEAL)
+    c.setFont("SourceSans", 9)
+    c.drawCentredString(PAGE_W / 2, PAGE_H - 1.48 * inch, "2025–2026")
 
     draw_polaroid(
         c,
@@ -450,65 +450,6 @@ def cover_page(c: canvas.Canvas, hero: str) -> None:
         angle=6.4,
         caption="pour-over",
     )
-
-    opaque(c)
-    c.setFillColorRGB(*MUTED)
-    c.setFont("SourceSansLight", 8.5)
-    c.drawString(0.62 * inch, 0.42 * inch, "Hand-thrown and hand-built stoneware")
-    c.showPage()
-
-
-def colophon_page(c: canvas.Canvas, page_no: int) -> None:
-    paint_page(c)
-    # note card
-    card_w, card_h = 6.3 * inch, 7.4 * inch
-    cx, cy = PAGE_W / 2, PAGE_H / 2 + 0.1 * inch
-    c.saveState()
-    c.translate(cx, cy)
-    c.rotate(-0.8)
-    opaque(c)
-    c.setFillColorRGB(*SHADOW)
-    c.roundRect(-card_w / 2 + 5, -card_h / 2 - 6, card_w, card_h, 6, fill=1, stroke=0)
-    opaque(c)
-    c.setFillColorRGB(*POLAROID)
-    c.setStrokeColorRGB(0.86, 0.80, 0.72)
-    c.setLineWidth(0.5)
-    c.roundRect(-card_w / 2, -card_h / 2, card_w, card_h, 5, fill=1, stroke=1)
-    _tape(c, 0, card_h / 2 - 4, 1.4 * inch, 12, 3, Color(0.62, 0.70, 0.62, alpha=0.5))
-    opaque(c)
-
-    c.setFillColorRGB(*TEAL)
-    c.setFont("SourceSans", 8.5)
-    c.drawCentredString(0, card_h / 2 - 0.55 * inch, "NOTES")
-    c.setFillColorRGB(*INK)
-    c.setFont("Cormorant", 26)
-    c.drawCentredString(0, card_h / 2 - 1.05 * inch, "About this scrapbook")
-
-    body = [
-        "Most pieces were photographed on the same studio set —",
-        "a wood table against a white wall — so the book reads as one sitting.",
-        "Where a piece has not been re-shot yet, the earlier photograph is kept.",
-        "Frames are cropped in on the ware so glaze and form read clearly;",
-        "nothing is cut from the pot, and the pottery itself is unretouched.",
-        "",
-        "Near-duplicate frames of the same view were reduced to the",
-        "clearest view.",
-        "",
-        "Wheel-thrown and hand-built stoneware:",
-        "reactive glazes, carved surfaces, functional ware.",
-        "",
-        "Mennatallah Rihan",
-        "menna.rihan@outlook.com",
-    ]
-    c.setFont("SourceSansLight", 10)
-    opaque(c)
-    c.setFillColorRGB(*INK)
-    ty = card_h / 2 - 1.55 * inch
-    for line in body:
-        c.drawCentredString(0, ty, line)
-        ty -= 15
-    c.restoreState()
-    footer_number(c, page_no)
     c.showPage()
 
 
@@ -592,7 +533,7 @@ def build_pdf() -> None:
     c = canvas.Canvas(str(OUTPUT), pagesize=PAGE)
     c.setTitle("Ceramics Portfolio — Mennatallah Rihan")
     c.setAuthor("Mennatallah Rihan")
-    c.setSubject("A scrapbook of recent pottery work")
+    c.setSubject("Works by Menna Rihan, 2025–2026")
     c.setCreator("ceramics-portfolio/build_portfolio.py")
 
     cover_page(c, "collection-earthtones.jpg")
@@ -789,7 +730,6 @@ def build_pdf() -> None:
         angle=-0.8,
     )
     n += 1
-    colophon_page(c, n)
 
     c.save()
     print(f"wrote {OUTPUT} ({OUTPUT.stat().st_size / 1e6:.1f} MB)")

@@ -1,6 +1,6 @@
 # Ceramics portfolio
 
-A letter-size scrapbook PDF of Mennatallah Rihan’s recent pottery.
+A letter-size scrapbook PDF of works by Menna Rihan, 2025–2026.
 
 - **PDF:** [Mennatallah_Rihan_Ceramics_Portfolio.pdf](./Mennatallah_Rihan_Ceramics_Portfolio.pdf)
 - Pieces that have a new studio photograph use that frame (wood table, white wall).
