@@ -1,12 +1,12 @@
 # Ceramics portfolio
 
-A letter-size PDF of Mennatallah Rihan’s recent pottery.
+A letter-size scrapbook PDF of Mennatallah Rihan’s recent pottery.
 
 - **PDF:** [Mennatallah_Rihan_Ceramics_Portfolio.pdf](./Mennatallah_Rihan_Ceramics_Portfolio.pdf)
+- Pieces that have a new studio photograph use that frame (wood table, white wall).
+- Pieces without a new photograph are kept as the original full frame — nothing cropped from the pot.
 - Pottery is shown as fired (no retouching of the objects).
-- Other photos are placed on the same wall-and-wood studio as the earth-tone set.
-- The collection shot and the wheel process shot keep their original surroundings.
-- Duplicate frames of the same piece were reduced to the clearest detail views.
+- Duplicate frames of the same view were reduced to the clearest one.
 
 Rebuild:
 
