@@ -70,44 +70,54 @@ def photo_size(name: str) -> tuple[int, int]:
 
 
 def make_paper(path: Path, size: tuple[int, int] = (1650, 2200)) -> None:
-    """Warm kraft album paper with speckle and a faint dotted lattice."""
+    """Warm kraft album paper with terracotta sprigs and sage pluses."""
     path.parent.mkdir(parents=True, exist_ok=True)
     W, H = size
     rng = np.random.default_rng(21)
     yy = np.linspace(0, 1, H, dtype=np.float32)[:, None]
     xx = np.linspace(0, 1, W, dtype=np.float32)[None, :]
     t = 0.35 * yy + 0.20 * xx
-    c1 = np.array([232, 214, 186], dtype=np.float32)
-    c2 = np.array([206, 180, 146], dtype=np.float32)
+    c1 = np.array([236, 220, 194], dtype=np.float32)
+    c2 = np.array([214, 190, 156], dtype=np.float32)
     base = c1 * (1 - t[..., None]) + c2 * t[..., None]
-    # fibers
-    base += rng.normal(0, 5.5, (H, W, 3)).astype(np.float32)
-    # faint horizontal laid lines
-    for y in range(0, H, 7):
-        base[y, :, :] *= 0.985
-    # speckle
+    base += rng.normal(0, 4.5, (H, W, 3)).astype(np.float32)
+    for y in range(0, H, 6):
+        base[y, :, :] *= 0.988
     speck = rng.random((H, W))
-    base[speck > 0.993] *= 0.72
-    base[speck < 0.007] = np.minimum(base[speck < 0.007] + 22, 255)
-    # dotted lattice (scrapbook album paper)
-    motif = np.array([188, 148, 118], dtype=np.float32)
-    step = 46
+    base[speck > 0.994] *= 0.70
+    base[speck < 0.006] = np.minimum(base[speck < 0.006] + 20, 255)
+
     yy_i, xx_i = np.ogrid[:H, :W]
+    terracotta = np.array([176, 118, 92], dtype=np.float32)
+    sage = np.array([130, 148, 126], dtype=np.float32)
+    alpha = np.zeros((H, W), dtype=np.float32)
+    step = 52
     row = ((yy_i // step) % 2) * (step // 2)
     dx = (xx_i + row) % step - step // 2
     dy = yy_i % step - step // 2
     dist = np.sqrt(dx * dx + dy * dy)
-    dots = dist < 1.7
-    ring = (dist > 10.5) & (dist < 12.0)
-    alpha = np.zeros((H, W), dtype=np.float32)
-    alpha[dots] = 0.32
-    alpha[ring] = 0.14
-    base = base * (1 - alpha[..., None]) + motif * alpha[..., None]
-    # soft vignette
+    alpha[dist < 2.2] = 0.38
+    for k in range(6):
+        ang = k * np.pi / 3.0
+        px = dx - 7.2 * np.cos(ang)
+        py = dy - 7.2 * np.sin(ang)
+        petal = np.sqrt(px * px + py * py) < 2.4
+        alpha[petal] = np.maximum(alpha[petal], 0.28)
+    out = base * (1 - alpha[..., None]) + terracotta * alpha[..., None]
+
+    step2 = 52
+    row2 = ((yy_i // step2) % 2) * (step2 // 2) + step2 // 2
+    dx2 = (xx_i + row2) % step2 - step2 // 2
+    dy2 = (yy_i + step2 // 2) % step2 - step2 // 2
+    plus = ((np.abs(dx2) < 1.2) & (np.abs(dy2) < 5.5)) | ((np.abs(dy2) < 1.2) & (np.abs(dx2) < 5.5))
+    sage_a = np.zeros((H, W), dtype=np.float32)
+    sage_a[plus] = 0.22
+    out = out * (1 - sage_a[..., None]) + sage * sage_a[..., None]
+
     cy, cx = (H - 1) / 2, (W - 1) / 2
     vr = np.sqrt(((yy_i - cy) / H) ** 2 + ((xx_i - cx) / W) ** 2)
-    base *= (1.0 - 0.08 * np.clip(vr, 0, 1))[..., None]
-    img = np.clip(base, 0, 255).astype(np.uint8)
+    out *= (1.0 - 0.06 * np.clip(vr, 0, 1))[..., None]
+    img = np.clip(out, 0, 255).astype(np.uint8)
     Image.fromarray(img, "RGB").save(path, format="JPEG", quality=88, optimize=True)
 
 
@@ -271,9 +281,9 @@ def work_single(
         c,
         photo,
         PAGE_W / 2,
-        PAGE_H / 2 + 0.05 * inch,
-        PAGE_W - 0.9 * inch,
-        PAGE_H - 1.7 * inch,
+        PAGE_H / 2 - 0.02 * inch,
+        PAGE_W - 1.05 * inch,
+        PAGE_H - 2.15 * inch,
         angle=angle if angle is not None else 1.2,
         caption=polaroid_caption or title,
     )
@@ -336,18 +346,28 @@ def cover_page(c: canvas.Canvas, hero: str) -> None:
     draw_polaroid(
         c,
         hero,
-        PAGE_W / 2,
-        PAGE_H / 2 - 0.22 * inch,
-        PAGE_W - 1.1 * inch,
-        PAGE_H - 3.15 * inch,
-        angle=-1.4,
+        PAGE_W / 2 - 0.18 * inch,
+        PAGE_H / 2 + 0.12 * inch,
+        PAGE_W - 1.55 * inch,
+        PAGE_H - 3.55 * inch,
+        angle=-1.8,
         caption="earth-tone collection",
+    )
+    draw_polaroid(
+        c,
+        "pour-over-stacked.jpg",
+        PAGE_W * 0.695,
+        2.55 * inch,
+        2.45 * inch,
+        3.15 * inch,
+        angle=6.4,
+        caption="pour-over",
     )
 
     opaque(c)
     c.setFillColorRGB(*MUTED)
     c.setFont("SourceSansLight", 8.5)
-    c.drawCentredString(PAGE_W / 2, 0.48 * inch, "Hand-thrown and hand-built stoneware")
+    c.drawString(0.62 * inch, 0.42 * inch, "Hand-thrown and hand-built stoneware")
     c.showPage()
 
 
@@ -411,6 +431,7 @@ NEW_SHOTS = [
     ("01a08bd1-6b34-7a5f-8e3d-3b96ea6319be.jpg", "vase-swirl.jpg"),
     ("01a08bd1-735c-758f-8b12-001c13744919.jpg", "bowl-oxblood.jpg"),
     ("01a08bd1-7c2b-71f1-ade4-0edc9ffc15b3.jpg", "dish-marbled.jpg"),
+    ("01a08bd1-852a-742f-833f-5425cecc6fc0.jpg", "bowl-and-dish.jpg"),
     ("01a08bd1-8ded-70e2-a003-1898cd3e0dbb.jpg", "cup-moss.jpg"),
     ("01a08bd1-9a6b-797f-97ad-4560a300df34.jpg", "bowl-midnight-exterior.jpg"),
     ("01a08bd1-a35d-7ce2-ae06-942e9e0beb59.jpg", "pitcher-green.jpg"),
@@ -489,16 +510,6 @@ def build_pdf() -> None:
     n = 1
     work_single(
         c,
-        "collection-earthtones.jpg",
-        "Earth-tone collection",
-        "Six related forms in tan, amber, and chocolate glazes",
-        n,
-        "the set",
-        angle=-1.1,
-    )
-    n += 1
-    work_single(
-        c,
         "wheat-pair.jpg",
         "Wheat pair",
         "Carved cylinder and matching letter holder; tan rim over pooled chocolate",
@@ -550,12 +561,22 @@ def build_pdf() -> None:
         "the plate",
     )
     n += 1
+    work_single(
+        c,
+        "bowl-and-dish.jpg",
+        "Marbled set",
+        "Small bowl and shallow plate together; oxblood, cyan, and cream",
+        n,
+        "bowl and plate",
+        angle=1.1,
+    )
+    n += 1
     work_pair(
         c,
         "dish-marbled.jpg",
         "bowl-oxblood.jpg",
-        "Marbled set",
-        "Shallow plate and small bowl; oxblood, cyan, and cream in the firing",
+        "Marbled wells",
+        "The same plate and bowl from above",
         n,
         "plate",
         "bowl",
