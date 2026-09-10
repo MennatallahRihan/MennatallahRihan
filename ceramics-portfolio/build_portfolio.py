@@ -81,7 +81,7 @@ def _expand_to_aspect(
         return left, top, right, bottom
     aspect = cw / ch
     if aspect > hi:
-        target_h = int(cw / hi)
+        target_h = min(int(cw / hi), int(ch * 1.48))
         extra = max(0, target_h - ch)
         up = int(extra * 0.38)
         down = extra - up
