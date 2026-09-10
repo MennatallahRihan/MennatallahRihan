@@ -729,7 +729,6 @@ def build_pdf() -> None:
         "leather-hard",
         angle=-0.8,
     )
-    n += 1
 
     c.save()
     print(f"wrote {OUTPUT} ({OUTPUT.stat().st_size / 1e6:.1f} MB)")
