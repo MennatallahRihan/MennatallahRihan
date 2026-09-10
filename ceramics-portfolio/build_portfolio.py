@@ -2,8 +2,9 @@
 """Build a scrapbook-style ceramics portfolio PDF.
 
 New same-setup photos replace earlier shots of those pieces. Pieces that
-were not re-photographed stay as the original full frame (no isolation or
-cropping). Pottery pixels are not retouched.
+were not re-photographed stay on their original background. Every frame is
+cropped in on the ware so the piece reads clearly; pottery pixels are not
+retouched, and the crop does not cut into the pot.
 """
 
 from __future__ import annotations
@@ -13,7 +14,8 @@ import math
 from pathlib import Path
 
 import numpy as np
-from PIL import Image, ImageOps
+from PIL import Image, ImageFilter, ImageOps
+from rembg import new_session, remove
 from reportlab.lib.colors import Color
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.units import inch
@@ -40,6 +42,15 @@ SHADOW = (0.70, 0.62, 0.52)
 
 MAX_PHOTO_EDGE = 2000
 
+_REMBG = None
+
+
+def _rembg_session():
+    global _REMBG
+    if _REMBG is None:
+        _REMBG = new_session("isnet-general-use")
+    return _REMBG
+
 
 def register_fonts() -> None:
     pdfmetrics.registerFont(TTFont("Cormorant", str(FONT_DIR / "CormorantGaramond-Regular.ttf")))
@@ -54,9 +65,85 @@ def seed_for(name: str) -> np.random.Generator:
     return np.random.default_rng(n)
 
 
+def _expand_to_aspect(
+    left: int,
+    top: int,
+    right: int,
+    bottom: int,
+    width: int,
+    height: int,
+    lo: float,
+    hi: float,
+) -> tuple[int, int, int, int]:
+    """Grow a crop window so the polaroid is not a skinny strip."""
+    cw, ch = right - left, bottom - top
+    if cw < 8 or ch < 8:
+        return left, top, right, bottom
+    aspect = cw / ch
+    if aspect > hi:
+        target_h = int(cw / hi)
+        extra = max(0, target_h - ch)
+        up = int(extra * 0.38)
+        down = extra - up
+        if top - up < 0:
+            down += up - top
+            up = top
+        if bottom + down > height:
+            up += bottom + down - height
+            down = height - bottom
+            up = min(up, top)
+        top -= up
+        bottom += down
+    elif aspect < lo:
+        target_w = int(ch * lo)
+        extra = max(0, target_w - cw)
+        grow_l = extra // 2
+        grow_r = extra - grow_l
+        if left - grow_l < 0:
+            grow_r += grow_l - left
+            grow_l = left
+        if right + grow_r > width:
+            grow_l += right + grow_r - width
+            grow_r = width - right
+            grow_l = min(grow_l, left)
+        left -= grow_l
+        right += grow_r
+    return left, top, right, bottom
+
+
+def tight_crop(im: Image.Image, name: str) -> Image.Image:
+    """Crop to the pottery plus a little table/wall. Does not cut the ware."""
+    W, H = im.size
+    if name == "process-carved-spiral.jpg":
+        # rembg treats the whole wheel as the subject; crop in on the bowl.
+        side = int(0.66 * min(W, H))
+        cx, cy = W // 2, int(H * 0.53)
+        left = max(0, cx - side // 2)
+        top = max(0, cy - side // 2)
+        return im.crop((left, top, min(W, left + side), min(H, top + side)))
+
+    rgba = remove(im, session=_rembg_session())
+    alpha = np.array(rgba.split()[-1].filter(ImageFilter.MaxFilter(7)))
+    ys, xs = np.where(alpha > 40)
+    if len(xs) < 400:
+        return im
+    x0, x1 = int(xs.min()), int(xs.max())
+    y0, y1 = int(ys.min()), int(ys.max())
+    ow, oh = max(1, x1 - x0), max(1, y1 - y0)
+    left = max(0, x0 - int(0.12 * ow))
+    top = max(0, y0 - int(0.14 * oh))
+    right = min(W, x1 + int(0.12 * ow))
+    bottom = min(H, y1 + int(0.18 * oh))
+    left, top, right, bottom = _expand_to_aspect(left, top, right, bottom, W, H, 0.78, 1.08)
+    if right - left < 32 or bottom - top < 32:
+        return im
+    return im.crop((left, top, right, bottom))
+
+
 def prepare_photo(src: Path, dest: Path) -> None:
     dest.parent.mkdir(parents=True, exist_ok=True)
     im = ImageOps.exif_transpose(Image.open(src)).convert("RGB")
+    im = tight_crop(im, dest.name)
     w, h = im.size
     scale = min(1.0, MAX_PHOTO_EDGE / max(w, h))
     if scale < 1.0:
@@ -167,7 +254,7 @@ def draw_polaroid(
     caption: str = "",
     tape: bool = True,
 ) -> None:
-    """Place the full photograph in a tilted polaroid. Nothing is cropped."""
+    """Place the photograph in a tilted polaroid. The JPEG is already tight-cropped."""
     im_w, im_h = photo_size(name)
     rng = seed_for(name)
     if angle is None:
@@ -400,11 +487,12 @@ def colophon_page(c: canvas.Canvas, page_no: int) -> None:
     body = [
         "Most pieces were photographed on the same studio set —",
         "a wood table against a white wall — so the book reads as one sitting.",
-        "Where a piece has not been re-shot yet, the earlier frame is kept",
-        "as it was taken: full photograph, nothing cropped from the pot.",
+        "Where a piece has not been re-shot yet, the earlier photograph is kept.",
+        "Frames are cropped in on the ware so glaze and form read clearly;",
+        "nothing is cut from the pot, and the pottery itself is unretouched.",
         "",
         "Near-duplicate frames of the same view were reduced to the",
-        "clearest view. Pottery itself is unretouched.",
+        "clearest view.",
         "",
         "Wheel-thrown and hand-built stoneware:",
         "reactive glazes, carved surfaces, functional ware.",
@@ -442,7 +530,7 @@ NEW_SHOTS = [
     ("EEE14675-9BF5-4AE5-862F-CECAC228A6FE_L0_001.jpg", "vase-low-teal.jpg"),
 ]
 
-# Pieces with no new photograph — original full frames only.
+# Pieces with no new photograph — original background, tight-cropped to the ware.
 LEFTOVER = [
     ("01a07eda-fd53-70c0-94aa-a4495d9181cf.jpg", "collection-earthtones.jpg"),
     ("01a07eda-fd0e-7f48-9626-60511b116192.jpg", "jar-lidded-amber.jpg"),
